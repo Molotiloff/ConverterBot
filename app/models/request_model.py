@@ -1,0 +1,12 @@
+from dataclasses import dataclass
+from decimal import Decimal
+
+
+@dataclass(frozen=True)
+class ConversionRequest:
+    from_currency: str
+    to_currency: str
+    amount: Decimal
+    percent: Decimal | None = None
+    sign: int = -1
+    is_markup: bool = False
