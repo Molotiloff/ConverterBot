@@ -3,7 +3,7 @@ from .decimal_utils import (
     quant_2,
     quant_0,
     format_decimal_2,
-    format_int_with_spaces,
+    format_decimal_compact,
     format_amount,
     format_percent,
 )
@@ -13,7 +13,7 @@ __all__ = [
     "quant_2",
     "quant_0",
     "format_decimal_2",
-    "format_int_with_spaces",
+    "format_decimal_compact",
     "format_amount",
     "format_percent",
 ]
