@@ -1,13 +1,14 @@
 from __future__ import annotations
 
+from decimal import Decimal
 from io import BytesIO
+
 from PIL import Image, ImageDraw, ImageFont
 
 from app.models.result_model import ConversionResult
 from app.utils.decimal_utils import (
     format_amount,
     format_decimal_2,
-    format_int_with_apostrophe,
     format_percent,
 )
 
@@ -85,6 +86,36 @@ class RateCardRenderer:
         )
         return self.WIDTH, height
 
+    def _build_calc_block(self, result: ConversionResult) -> tuple[str, str | None]:
+        amount_str = format_amount(result.amount)
+        rate_str = format_decimal_2(result.rate)
+        converted_str = format_decimal_2(result.converted)
+
+        calc_1 = f"{amount_str} × {rate_str} = {converted_str}"
+
+        if result.percent is None or result.gross is None:
+            return calc_1, None
+
+        gross_str = format_decimal_2(result.gross)
+        percent_fraction = result.percent / Decimal("100")
+
+        if result.is_markup:
+            if result.sign > 0:
+                divisor = format_decimal_2(Decimal("1") - percent_fraction)
+            else:
+                divisor = format_decimal_2(Decimal("1") + percent_fraction)
+
+            calc_2 = f"{amount_str} × {rate_str} / {divisor} = {gross_str}"
+            return calc_1, calc_2
+
+        if result.sign > 0:
+            multiplier = format_decimal_2(Decimal("1") + percent_fraction)
+        else:
+            multiplier = format_decimal_2(Decimal("1") - percent_fraction)
+
+        calc_2 = f"{converted_str} × {multiplier} = {gross_str}"
+        return calc_1, calc_2
+
     def render(self, result: ConversionResult) -> BytesIO:
         amount_str = format_amount(result.amount)
         converted_str = format_decimal_2(result.converted)
@@ -92,13 +123,8 @@ class RateCardRenderer:
 
         header_line = f"{amount_str} {result.from_currency} = {converted_str} {result.to_currency}"
         cross_line = f"1 {result.from_currency} = {rate_str} {result.to_currency}"
-        calc_1 = f"{amount_str} × {rate_str} = {converted_str}"
 
-        calc_2 = None
-        if result.percent is not None and result.gross is not None:
-            percent_str = format_percent(result.percent)
-            gross_str = format_int_with_apostrophe(result.gross)
-            calc_2 = f"{converted_str}/(1-{percent_str}%) = {gross_str}"
+        calc_1, calc_2 = self._build_calc_block(result)
 
         width, height = self.get_size(result)
 
