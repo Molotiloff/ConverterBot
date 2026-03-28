@@ -9,7 +9,7 @@ from app.models.result_model import ConversionResult
 from app.utils.decimal_utils import (
     format_amount,
     format_decimal_2,
-    format_percent,
+    format_decimal_compact,
 )
 
 
@@ -88,10 +88,10 @@ class RateCardRenderer:
 
     def _build_calc_block(self, result: ConversionResult) -> tuple[str, str | None]:
         amount_str = format_amount(result.amount)
-        rate_str = format_decimal_2(result.rate)
+        rate_formula_str = format_decimal_compact(result.rate, 4)
         converted_str = format_decimal_2(result.converted)
 
-        calc_1 = f"{amount_str} × {rate_str} = {converted_str}"
+        calc_1 = f"{amount_str} × {rate_formula_str} = {converted_str}"
 
         if result.percent is None or result.gross is None:
             return calc_1, None
@@ -101,17 +101,17 @@ class RateCardRenderer:
 
         if result.is_markup:
             if result.sign > 0:
-                divisor = format_decimal_2(Decimal("1") - percent_fraction)
+                divisor = format_decimal_compact(Decimal("1") - percent_fraction, 4)
             else:
-                divisor = format_decimal_2(Decimal("1") + percent_fraction)
+                divisor = format_decimal_compact(Decimal("1") + percent_fraction, 4)
 
-            calc_2 = f"{amount_str} × {rate_str} / {divisor} = {gross_str}"
+            calc_2 = f"{amount_str} × {rate_formula_str} / {divisor} = {gross_str}"
             return calc_1, calc_2
 
         if result.sign > 0:
-            multiplier = format_decimal_2(Decimal("1") + percent_fraction)
+            multiplier = format_decimal_compact(Decimal("1") + percent_fraction, 4)
         else:
-            multiplier = format_decimal_2(Decimal("1") - percent_fraction)
+            multiplier = format_decimal_compact(Decimal("1") - percent_fraction, 4)
 
         calc_2 = f"{converted_str} × {multiplier} = {gross_str}"
         return calc_1, calc_2

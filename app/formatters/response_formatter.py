@@ -5,6 +5,7 @@ from app.models.result_model import ConversionResult
 from app.utils.decimal_utils import (
     format_amount,
     format_decimal_2,
+    format_decimal_compact,
     format_percent,
 )
 
@@ -65,31 +66,28 @@ class ResponseFormatter:
 
     def _build_calc_block(self, result: ConversionResult) -> str:
         amount_str = escape(format_amount(result.amount))
-        rate_str = escape(format_decimal_2(result.rate))
+        rate_formula_str = escape(format_decimal_compact(result.rate, 4))
         converted_str = escape(format_decimal_2(result.converted))
 
-        # без комиссии
         if result.percent is None or result.gross is None:
-            return f"{amount_str}*{rate_str} = {converted_str}"
+            return f"{amount_str}*{rate_formula_str} = {converted_str}"
 
         gross_str = escape(format_decimal_2(result.gross))
         percent_fraction = result.percent / Decimal("100")
 
-        # %% (деление)
         if result.is_markup:
             if result.sign > 0:
                 divisor = Decimal("1") - percent_fraction
             else:
                 divisor = Decimal("1") + percent_fraction
 
-            divisor_str = escape(format_decimal_2(divisor))
-            return f"{amount_str}*{rate_str}/{divisor_str} = {gross_str}"
+            divisor_str = escape(format_decimal_compact(divisor, 4))
+            return f"{amount_str}*{rate_formula_str}/{divisor_str} = {gross_str}"
 
-        # % (умножение)
         if result.sign > 0:
             multiplier = Decimal("1") + percent_fraction
         else:
             multiplier = Decimal("1") - percent_fraction
 
-        multiplier_str = escape(format_decimal_2(multiplier))
+        multiplier_str = escape(format_decimal_compact(multiplier, 4))
         return f"{converted_str}*{multiplier_str} = {gross_str}"
