@@ -88,6 +88,25 @@ class RateCardRenderer:
         )
         return self.WIDTH, height
 
+    def _build_header(
+        self,
+        result: ConversionResult,
+        amount_str: str,
+        final_str: str,
+    ) -> str:
+        if result.percent is None:
+            return f"{amount_str} {result.from_currency} = {final_str} {result.to_currency}"
+
+        sign_symbol = "+" if result.sign > 0 else "-"
+        percent_str = format_percent(result.percent)
+        suffix = "%%" if result.is_markup else "%"
+
+        return (
+            f"{amount_str} {result.from_currency} "
+            f"{sign_symbol} {percent_str}{suffix} = "
+            f"{final_str} {result.to_currency}"
+        )
+
     def _build_calc_block(self, result: ConversionResult) -> tuple[str, str | None]:
         amount_str = format_amount(result.amount)
         rate_formula_str = format_decimal_compact(result.rate, 4)
@@ -126,7 +145,7 @@ class RateCardRenderer:
         )
         rate_str = format_decimal_compact(result.rate, 4)
 
-        header_line = f"{amount_str} {result.from_currency} = {final_str} {result.to_currency}"
+        header_line = self._build_header(result, amount_str, final_str)
         cross_line = f"1 {result.from_currency} = {rate_str} {result.to_currency}"
 
         calc_1, calc_2 = self._build_calc_block(result)
