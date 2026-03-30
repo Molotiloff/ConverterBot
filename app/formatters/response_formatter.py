@@ -53,7 +53,7 @@ class ResponseFormatter:
             f"-----\n"
             f"{calc_block}\n"
             f"----\n"
-            f'<a href="{safe_skyex}">POWERED BY SKYEX</a>'
+            f'<a href="{safe_skyex}">Powered by SKYEX</a>'
         )
 
     def build_preview_text(self, result: ConversionResult) -> str:

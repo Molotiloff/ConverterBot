@@ -171,7 +171,7 @@ class RateCardRenderer:
         if calc_2:
             draw.text((x, y), calc_2, font=self.font_regular, fill=self.TEXT_PRIMARY)
 
-        footer_text = f"POWERED BY {self.brand_name.upper()}"
+        footer_text = f"Powered by {self.brand_name.upper()}"
         _, footer_h = self._text_bbox(draw, footer_text, self.font_small)
         footer_margin = 36
         footer_y = height - card_margin - footer_margin - footer_h
