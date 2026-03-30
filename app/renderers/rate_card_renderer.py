@@ -34,7 +34,7 @@ class RateCardRenderer:
     def __init__(
         self,
         xe_url_template: str,
-        brand_name: str = "SkyEX",
+        brand_name: str = "SKYEX",
     ):
         self.xe_url_template = xe_url_template
         self.brand_name = brand_name
