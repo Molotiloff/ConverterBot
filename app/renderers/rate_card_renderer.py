@@ -16,7 +16,9 @@ from app.utils.decimal_utils import (
 
 
 class RateCardRenderer:
-    WIDTH = 1200
+    MIN_WIDTH = 1200
+    MAX_WIDTH = 1800
+
     HEIGHT_WITH_PERCENT = 520
     HEIGHT_NO_PERCENT = 460
 
@@ -80,13 +82,18 @@ class RateCardRenderer:
             width=2,
         )
 
+    def _calculate_width(self, draw: ImageDraw.ImageDraw, header_line: str) -> int:
+        text_w, _ = self._text_bbox(draw, header_line, self.font_title)
+        width = text_w + self.PADDING_X * 2 + 100
+        return min(max(width, self.MIN_WIDTH), self.MAX_WIDTH)
+
     def get_size(self, result: ConversionResult) -> tuple[int, int]:
         height = (
             self.HEIGHT_WITH_PERCENT
             if result.percent is not None and result.final_amount is not None
             else self.HEIGHT_NO_PERCENT
         )
-        return self.WIDTH, height
+        return self.MIN_WIDTH, height
 
     def _build_header(
         self,
@@ -150,7 +157,11 @@ class RateCardRenderer:
 
         calc_1, calc_2 = self._build_calc_block(result)
 
-        width, height = self.get_size(result)
+        temp_img = Image.new("RGB", (10, 10))
+        temp_draw = ImageDraw.Draw(temp_img)
+
+        width = self._calculate_width(temp_draw, header_line)
+        height = self.get_size(result)[1]
 
         image = Image.new("RGB", (width, height), self.BG_COLOR)
         draw = ImageDraw.Draw(image)
