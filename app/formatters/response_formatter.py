@@ -32,6 +32,7 @@ class ResponseFormatter:
         amount_str = escape(format_amount(result.amount))
         from_currency = escape(result.from_currency)
         to_currency = escape(result.to_currency)
+        rate_str = escape(format_decimal_compact(result.rate, 4))
 
         final_str = (
             escape(format_decimal_3(result.final_amount))
@@ -39,18 +40,18 @@ class ResponseFormatter:
             else escape(format_decimal_2(result.converted))
         )
 
-        rate_str = escape(format_decimal_compact(result.rate, 4))
-        header = f"{amount_str} {from_currency} = {final_str} {to_currency}"
+        header = self._build_header(result, amount_str, final_str, from_currency, to_currency)
         calc_block = self._build_calc_block(result)
 
         return (
             f'<a href="{safe_image_url}">&#8205;</a>\n'
             f"{header}\n"
             f"-----\n"
-            f"{calc_block}\n\n"
             f"Кросс по "
             f'<a href="{safe_xe_url}">xe.com</a> '
             f"1 {from_currency} = {rate_str} {to_currency}\n"
+            f"-----\n"
+            f"{calc_block}\n"
             f"----\n"
             f'<a href="{safe_skyex}">Powered by SkyEX</a>'
         )
@@ -78,6 +79,24 @@ class ResponseFormatter:
             f"({sign_symbol}{percent_str}{suffix})"
         )
 
+    def _build_header(
+        self,
+        result: ConversionResult,
+        amount_str: str,
+        final_str: str,
+        from_currency: str,
+        to_currency: str,
+    ) -> str:
+        if result.percent is None:
+            return f"{amount_str} {from_currency} = {final_str} {to_currency}"
+
+        sign_symbol = "+" if result.sign > 0 else "-"
+        percent_str = escape(format_percent(result.percent))
+
+        suffix = "%%" if result.is_markup else "%"
+
+        return f"{amount_str} {from_currency} {sign_symbol} {percent_str}{suffix} = {final_str} {to_currency}"
+
     def _build_calc_block(self, result: ConversionResult) -> str:
         amount_str = escape(format_amount(result.amount))
         rate_formula_str = escape(format_decimal_compact(result.rate, 4))
@@ -94,8 +113,10 @@ class ResponseFormatter:
 
         if result.is_markup:
             if result.sign > 0:
+                # +0.3%%
                 second_line = f"{converted_str}/(1-{percent_str}%) = {final_str}"
             else:
+                # -0.3%%
                 divisor = escape(format_decimal_compact(Decimal("1") + percent_fraction, 4))
                 second_line = f"{converted_str}/{divisor} = {final_str}"
 

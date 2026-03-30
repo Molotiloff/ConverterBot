@@ -1,7 +1,7 @@
 import re
 
 from app.models.request_model import ConversionRequest
-from app.utils.decimal_utils import parse_decimal
+from app.utils import CurrencyNormalizer, parse_decimal
 
 
 class CommandParser:
@@ -11,7 +11,7 @@ class CommandParser:
         r"""
         ^\s*
         (?:
-            (?P<from_only>[A-Za-z]{3})\s+
+            (?P<from_only>[A-Za-z€£₣¥$]{1,3})\s+
             (?P<amount_only>[0-9]+(?:[.,][0-9]+)?)
             (?:
                 \s*(?P<sign_only>[+-])\s*
@@ -19,8 +19,8 @@ class CommandParser:
                 (?P<mode_only>%%|%)
             )?
         |
-            (?P<from_pair>[A-Za-z]{3})\s+
-            (?P<to_pair>[A-Za-z]{3})\s+
+            (?P<from_pair>[A-Za-z€£₣¥$]{1,3})\s+
+            (?P<to_pair>[A-Za-z€£₣¥$]{1,3})\s+
             (?P<amount_pair>[0-9]+(?:[.,][0-9]+)?)
             (?:
                 \s*(?P<sign_pair>[+-])\s*
@@ -39,6 +39,8 @@ class CommandParser:
         cleaned = re.sub(r"^/xe(?:@\w+)?\s+", "", cleaned, flags=re.IGNORECASE)
         cleaned = re.sub(r"^@\w+\s+", "", cleaned, flags=re.IGNORECASE)
 
+        cleaned = CurrencyNormalizer.normalize_text(cleaned)
+
         match = self.REQUEST_RE.match(cleaned)
         if not match:
             raise ValueError(
@@ -46,6 +48,8 @@ class CommandParser:
                 "Примеры:\n"
                 "AED 1000\n"
                 "EUR AED 1000\n"
+                "€ $ 100\n"
+                "eur usd 100\n"
                 "EUR 100-0.3%\n"
                 "EUR 100-0.3%%\n"
                 "EUR 100+0.3%\n"
@@ -55,15 +59,15 @@ class CommandParser:
             )
 
         if match.group("from_only"):
-            from_currency = match.group("from_only").upper()
+            from_currency = CurrencyNormalizer.normalize_token(match.group("from_only"))
             to_currency = self.DEFAULT_TARGET_CURRENCY
             amount = parse_decimal(match.group("amount_only"))
             sign_raw = match.group("sign_only")
             percent_raw = match.group("percent_only")
             mode_raw = match.group("mode_only")
         else:
-            from_currency = match.group("from_pair").upper()
-            to_currency = match.group("to_pair").upper()
+            from_currency = CurrencyNormalizer.normalize_token(match.group("from_pair"))
+            to_currency = CurrencyNormalizer.normalize_token(match.group("to_pair"))
             amount = parse_decimal(match.group("amount_pair"))
             sign_raw = match.group("sign_pair")
             percent_raw = match.group("percent_pair")
