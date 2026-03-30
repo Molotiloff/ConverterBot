@@ -1,7 +1,6 @@
 from dataclasses import dataclass
 from decimal import Decimal
 
-
 @dataclass(frozen=True)
 class ConversionResult:
     from_currency: str
@@ -10,6 +9,6 @@ class ConversionResult:
     rate: Decimal
     converted: Decimal
     percent: Decimal | None = None
-    gross: Decimal | None = None
+    final_amount: Decimal | None = None
     sign: int = -1
     is_markup: bool = False

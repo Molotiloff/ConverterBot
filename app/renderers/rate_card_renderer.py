@@ -9,7 +9,9 @@ from app.models.result_model import ConversionResult
 from app.utils.decimal_utils import (
     format_amount,
     format_decimal_2,
+    format_decimal_3,
     format_decimal_compact,
+    format_percent,
 )
 
 
@@ -81,7 +83,7 @@ class RateCardRenderer:
     def get_size(self, result: ConversionResult) -> tuple[int, int]:
         height = (
             self.HEIGHT_WITH_PERCENT
-            if result.percent is not None and result.gross is not None
+            if result.percent is not None and result.final_amount is not None
             else self.HEIGHT_NO_PERCENT
         )
         return self.WIDTH, height
@@ -91,37 +93,40 @@ class RateCardRenderer:
         rate_formula_str = format_decimal_compact(result.rate, 4)
         converted_str = format_decimal_2(result.converted)
 
-        calc_1 = f"{amount_str} × {rate_formula_str} = {converted_str}"
+        first_line = f"{amount_str} × {rate_formula_str} = {converted_str}"
 
-        if result.percent is None or result.gross is None:
-            return calc_1, None
+        if result.percent is None or result.final_amount is None:
+            return first_line, None
 
-        gross_str = format_decimal_2(result.gross)
+        final_str = format_decimal_3(result.final_amount)
+        percent_str = format_percent(result.percent)
         percent_fraction = result.percent / Decimal("100")
 
         if result.is_markup:
             if result.sign > 0:
-                divisor = format_decimal_compact(Decimal("1") - percent_fraction, 4)
+                second_line = f"{converted_str}/(1-{percent_str}%) = {final_str}"
             else:
                 divisor = format_decimal_compact(Decimal("1") + percent_fraction, 4)
-
-            calc_2 = f"{amount_str} × {rate_formula_str} / {divisor} = {gross_str}"
-            return calc_1, calc_2
+                second_line = f"{converted_str}/{divisor} = {final_str}"
+            return first_line, second_line
 
         if result.sign > 0:
-            multiplier = format_decimal_compact(Decimal("1") + percent_fraction, 4)
+            second_line = f"{converted_str}+{percent_str}% = {final_str}"
         else:
-            multiplier = format_decimal_compact(Decimal("1") - percent_fraction, 4)
+            second_line = f"{converted_str}-{percent_str}% = {final_str}"
 
-        calc_2 = f"{converted_str} × {multiplier} = {gross_str}"
-        return calc_1, calc_2
+        return first_line, second_line
 
     def render(self, result: ConversionResult) -> BytesIO:
         amount_str = format_amount(result.amount)
-        converted_str = format_decimal_2(result.converted)
-        rate_str = format_decimal_2(result.rate)
+        final_str = (
+            format_decimal_3(result.final_amount)
+            if result.final_amount is not None
+            else format_decimal_2(result.converted)
+        )
+        rate_str = format_decimal_compact(result.rate, 4)
 
-        header_line = f"{amount_str} {result.from_currency} = {converted_str} {result.to_currency}"
+        header_line = f"{amount_str} {result.from_currency} = {final_str} {result.to_currency}"
         cross_line = f"1 {result.from_currency} = {rate_str} {result.to_currency}"
 
         calc_1, calc_2 = self._build_calc_block(result)

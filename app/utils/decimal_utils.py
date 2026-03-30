@@ -17,6 +17,10 @@ def quant_2(value: Decimal) -> Decimal:
     return value.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
 
 
+def quant_3(value: Decimal) -> Decimal:
+    return value.quantize(Decimal("0.001"), rounding=ROUND_HALF_UP)
+
+
 def quant_0(value: Decimal) -> Decimal:
     return value.quantize(Decimal("1"), rounding=ROUND_HALF_UP)
 
@@ -26,17 +30,14 @@ def quant_0(value: Decimal) -> Decimal:
 # ======================
 
 def format_decimal_2(value: Decimal) -> str:
-    """Всегда 2 знака после запятой"""
     return f"{quant_2(value):f}"
 
 
+def format_decimal_3(value: Decimal) -> str:
+    return f"{quant_3(value):f}"
+
+
 def format_decimal_compact(value: Decimal, places: int = 4) -> str:
-    """
-    Для формул:
-    1.15164 -> 1.1516
-    1.00300 -> 1.003
-    1.00000 -> 1
-    """
     quant = Decimal("1." + ("0" * places))
     normalized = value.quantize(quant, rounding=ROUND_HALF_UP)
 
@@ -48,10 +49,6 @@ def format_decimal_compact(value: Decimal, places: int = 4) -> str:
 
 
 def format_amount(value: Decimal) -> str:
-    """
-    1000 -> 1 000
-    1000.50 -> 1000.5
-    """
     if value == value.to_integral():
         return f"{int(value):,}".replace(",", " ")
 
@@ -63,12 +60,20 @@ def format_amount(value: Decimal) -> str:
 
 
 def format_percent(value: Decimal) -> str:
-    """
-    0.3 -> 0,3
-    1.00 -> 1
-    """
     normalized = format(value.normalize(), "f")
     if "." in normalized:
         normalized = normalized.rstrip("0").rstrip(".")
 
     return normalized.replace(".", ",")
+
+
+def format_url_amount(value: Decimal) -> str:
+    """
+    Для URL xe.com:
+    1000 -> 1000
+    1000.50 -> 1000.5
+    """
+    normalized = format(value.normalize(), "f")
+    if "." in normalized:
+        normalized = normalized.rstrip("0").rstrip(".")
+    return normalized
