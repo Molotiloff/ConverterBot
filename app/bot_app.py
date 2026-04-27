@@ -13,7 +13,7 @@ from app.handlers.start_handler import start_handler
 from app.parsers import CommandParser
 from app.renderers import RateCardRenderer
 from app.services import ConversionService
-from app.web import ImageServer, ImageStore
+from app.web import ApiImagePublisher, ImageServer, ImageStore, LocalImagePublisher
 
 
 class BotApp:
@@ -37,19 +37,29 @@ class BotApp:
             ttl_seconds=self.settings.image_ttl_seconds,
             max_items=self.settings.image_max_items,
         )
-        self.image_server = ImageServer(
-            host=self.settings.app_host,
-            port=self.settings.app_port,
-            image_store=self.image_store,
-        )
+        self.image_server = None
+        if self.settings.image_api_base_url:
+            self.image_publisher = ApiImagePublisher(
+                base_url=self.settings.image_api_base_url,
+                api_token=self.settings.api_token,
+            )
+        else:
+            self.image_server = ImageServer(
+                host=self.settings.app_host,
+                port=self.settings.app_port,
+                image_store=self.image_store,
+            )
+            self.image_publisher = LocalImagePublisher(
+                image_store=self.image_store,
+                public_base_url=self.settings.public_base_url,
+            )
 
         self.inline_handler = InlineQueryHandler(
             parser=self.parser,
             conversion_service=self.service,
             formatter=self.formatter,
             renderer=self.renderer,
-            image_store=self.image_store,
-            public_base_url=self.settings.public_base_url,
+            image_publisher=self.image_publisher,
         )
 
         self.message_handler = XeMessageHandler(
@@ -57,8 +67,7 @@ class BotApp:
             conversion_service=self.service,
             formatter=self.formatter,
             renderer=self.renderer,
-            image_store=self.image_store,
-            public_base_url=self.settings.public_base_url,
+            image_publisher=self.image_publisher,
         )
 
         self.dispatcher = Dispatcher()
@@ -80,8 +89,10 @@ class BotApp:
     async def run(self) -> None:
         logging.basicConfig(level=logging.INFO)
 
-        await self.image_server.start()
+        if self.image_server:
+            await self.image_server.start()
         try:
             await self.dispatcher.start_polling(self.bot)
         finally:
-            await self.image_server.stop()
+            if self.image_server:
+                await self.image_server.stop()

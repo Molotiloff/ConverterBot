@@ -11,15 +11,13 @@ class XeMessageHandler:
         conversion_service,
         formatter,
         renderer,
-        image_store,
-        public_base_url: str,
+        image_publisher,
     ):
         self.parser = parser
         self.conversion_service = conversion_service
         self.formatter = formatter
         self.renderer = renderer
-        self.image_store = image_store
-        self.public_base_url = public_base_url.rstrip("/")
+        self.image_publisher = image_publisher
 
     async def handle(self, message: Message):
         try:
@@ -35,12 +33,10 @@ class XeMessageHandler:
                 result,
             )
 
-            image_id = await self.image_store.put(
+            image_url = await self.image_publisher.publish(
                 content=image_buffer.getvalue(),
                 content_type="image/png",
             )
-
-            image_url = f"{self.public_base_url}/images/{image_id}.png"
 
             response_text = self.formatter.build_inline_article_text(
                 result=result,
