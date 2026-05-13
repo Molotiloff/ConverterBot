@@ -31,7 +31,7 @@ class ApiSettings:
 
     api_host: str
     api_port: int
-    api_token: str
+    api_token_hash: str
     public_base_url: str
 
     image_ttl_seconds: int
@@ -124,14 +124,14 @@ def get_api_settings() -> ApiSettings:
 
     api_host = os.getenv("API_HOST", "127.0.0.1").strip()
     api_port = int(os.getenv("API_PORT", "8090"))
-    api_token = os.getenv("API_TOKEN", "").strip()
+    api_token_hash = os.getenv("API_TOKEN_HASH", "").strip()
     public_base_url = os.getenv("PUBLIC_BASE_URL", "").strip().rstrip("/")
 
     image_ttl_seconds, image_max_items = _get_image_settings()
     api_rate_limit_requests, api_rate_limit_seconds = _get_rate_limit_settings()
 
-    if not api_token:
-        raise ValueError("API_TOKEN не найден в .env")
+    if not api_token_hash:
+        raise ValueError("API_TOKEN_HASH не найден в .env")
 
     _validate_public_base_url(public_base_url)
 
@@ -141,7 +141,7 @@ def get_api_settings() -> ApiSettings:
         xe_base_url=xe_base_url,
         api_host=api_host,
         api_port=api_port,
-        api_token=api_token,
+        api_token_hash=api_token_hash,
         public_base_url=public_base_url,
         image_ttl_seconds=image_ttl_seconds,
         image_max_items=image_max_items,

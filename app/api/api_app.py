@@ -31,7 +31,7 @@ async def _stop_cleanup(app: web.Application) -> None:
 
 def create_api_app(
     *,
-    api_token: str,
+    api_token_hash: str,
     public_base_url: str,
     parser,
     conversion_service,
@@ -48,7 +48,7 @@ def create_api_app(
         middlewares=[build_rate_limit_middleware(rate_limiter)],
         client_max_size=2 * 1024 * 1024,
     )
-    app["api_token"] = api_token
+    app["api_token_hash"] = api_token_hash
     app["public_base_url"] = public_base_url.rstrip("/")
     app["parser"] = parser
     app["conversion_service"] = conversion_service

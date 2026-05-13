@@ -34,7 +34,7 @@ def main() -> None:
     )
 
     app = create_api_app(
-        api_token=settings.api_token,
+        api_token_hash=settings.api_token_hash,
         public_base_url=settings.public_base_url,
         parser=parser,
         conversion_service=conversion_service,

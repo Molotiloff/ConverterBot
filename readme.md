@@ -107,7 +107,7 @@ API можно поднять локально и открыть наружу ч
 ```env
 API_HOST=127.0.0.1
 API_PORT=8090
-API_TOKEN=your-secret-token
+API_TOKEN_HASH=sha256-hex-of-your-secret-token
 PUBLIC_BASE_URL=https://your-ngrok-url.ngrok.app
 IMAGE_API_BASE_URL=http://127.0.0.1:8090
 API_RATE_LIMIT_REQUESTS=60
@@ -116,6 +116,7 @@ API_RATE_LIMIT_SECONDS=60
 
 `PUBLIC_BASE_URL` должен указывать на тот же ngrok tunnel, который смотрит на `API_PORT`.
 `IMAGE_API_BASE_URL` нужен старому Telegram-боту: он будет отправлять PNG в API, а API вернет публичную ссылку `PUBLIC_BASE_URL/images/...`.
+Старый и второй бот отправляют обычный `API_TOKEN`, а API хранит `API_TOKEN_HASH`.
 
 ### Запуск API
 

@@ -8,7 +8,7 @@ import requests
 from aiohttp import web
 from aiohttp.web_exceptions import HTTPBadRequest
 
-from app.api.auth import require_bearer_token
+from app.api.auth import require_bearer_token_hash
 from app.api.schemas import build_request_from_payload, parse_bool, result_to_payload
 
 logger = logging.getLogger(__name__)
@@ -26,7 +26,7 @@ async def health_handler(request: web.Request) -> web.Response:
 
 
 async def convert_handler(request: web.Request) -> web.Response:
-    require_bearer_token(request, request.app["api_token"])
+    require_bearer_token_hash(request, request.app["api_token_hash"])
 
     try:
         payload = await request.json()
@@ -72,7 +72,7 @@ async def convert_handler(request: web.Request) -> web.Response:
 
 
 async def upload_image_handler(request: web.Request) -> web.Response:
-    require_bearer_token(request, request.app["api_token"])
+    require_bearer_token_hash(request, request.app["api_token_hash"])
 
     content_type = request.headers.get("Content-Type", "").split(";", 1)[0]
     if content_type != "image/png":
