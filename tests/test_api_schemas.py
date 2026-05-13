@@ -91,3 +91,21 @@ class ApiSchemasTest(TestCase):
         self.assertEqual(payload["percent_mode"], "%")
         self.assertEqual(payload["final_amount"], "114.944")
         self.assertEqual(payload["image_url"], "https://example.ngrok.app/images/test.png")
+
+    def test_result_to_payload_uses_converted_as_final_amount_without_percent(self):
+        payload = result_to_payload(
+            ConversionResult(
+                from_currency="EUR",
+                to_currency="AED",
+                amount=Decimal("1000"),
+                rate=Decimal("4.2531"),
+                converted=Decimal("4253.10"),
+                percent=None,
+                final_amount=None,
+                sign=-1,
+                is_markup=False,
+            ),
+        )
+
+        self.assertEqual(payload["converted"], "4253.10")
+        self.assertEqual(payload["final_amount"], "4253.10")

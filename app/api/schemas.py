@@ -96,6 +96,8 @@ def result_to_payload(
     result: ConversionResult,
     image_url: str | None = None,
 ) -> dict[str, Any]:
+    final_amount = result.final_amount if result.final_amount is not None else result.converted
+
     payload = {
         "from_currency": result.from_currency,
         "to_currency": result.to_currency,
@@ -104,7 +106,7 @@ def result_to_payload(
         "converted": str(result.converted),
         "percent": str(result.percent) if result.percent is not None else None,
         "percent_mode": "%%" if result.is_markup else "%",
-        "final_amount": str(result.final_amount) if result.final_amount is not None else None,
+        "final_amount": str(final_amount),
         "sign": result.sign,
         "is_markup": result.is_markup,
     }
